@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AssignmentStatus {
+  OPEN
+  CLOSED
+}
+
+model User {
+  id                Int              @id @default(autoincrement())
+  username          String
+  email             String           @unique
+  password          String
+  role              UserRole         @default(STUDENT)
+  avatar_id         Int?
+  avatar            Avatar?          @relation(fields: [avatar_id], references: [id], onDelete: Cascade)
+  attachments       Attachment[]
+  classrooms        Classroom[]      @relation(name: "created_classrooms")
+  joined_classrooms Classroom[]      @relation(name: "joined_classrooms")
+  user_assignments  UserAssignment[]
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+}
+
+model Classroom {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String
+  thumbnail_id Int
+  creator_id   Int
+  thumbnail    Attachment   @relation(fields: [thumbnail_id], references: [id])
+  creator      User         @relation(fields: [creator_id], references: [id], name: "created_classrooms", onDelete: Cascade)
+  materials    Material[]
+  assignments  Assignment[]
+  members      User[]       @relation(name: "joined_classrooms")
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+}
+
+model Material {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String
+  classroom_id Int
+  attachments  Attachment[]
+  classroom    Classroom    @relation(fields: [classroom_id], references: [id])
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+}
+
+model Assignment {
+  id              Int              @id @default(autoincrement())
+  name            String
+  description     String
+  status          AssignmentStatus @default(OPEN)
+  classroom_id    Int
+  classroom       Classroom        @relation(fields: [classroom_id], references: [id])
+  attachments     Attachment[]
+  user_assignment UserAssignment[]
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+}
+
+model Attachment {
+  id               Int              @id @default(autoincrement())
+  filename         String
+  file_size        Int
+  file_type        String
+  uploader_id      Int
+  path             String
+  uploader         User             @relation(fields: [uploader_id], references: [id])
+  materials        Material[]
+  assignments      Assignment[]
+  classrooms       Classroom[]
+  avatar           Avatar[]
+  user_assignments UserAssignment[]
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+}
+
+model Avatar {
+  id            Int        @id @default(autoincrement())
+  attachment_id Int
+  attachment    Attachment @relation(fields: [attachment_id], references: [id])
+  user          User[]
+}
+
+model UserAssignment {
+  id            Int          @id @default(autoincrement())
+  grade         Float
+  user_id       Int
+  assignment_id Int
+  assignment    Assignment   @relation(fields: [assignment_id], references: [id])
+  user          User         @relation(fields: [user_id], references: [id])
+  attachments   Attachment[]
+}

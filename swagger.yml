@@ -1,0 +1,3855 @@
+---
+openapi: 3.0.0
+info:
+  title: Edulearn
+  description: rest api berbasis node js, express, prisma, dan passport
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+paths:
+  "/auth/login":
+    post:
+      summary: Login ke sistem
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        description: Data yang dikirim
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/login"
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              example:
+                status: success
+                message: Login berhasil
+                token: "<JSON Web Token>"
+        "400":
+          description: Input dari client tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: Login gagal
+          content:
+            application/json:
+              example:
+                status: failed
+                message: Login gagal
+        "404":
+          description: User tidak ditemukan
+          content:
+            application/json:
+              example:
+                status: failed
+                message: User tidak ditemukan
+  "/auth/register":
+    post:
+      summary: Mendaftar akun baru ke sistem
+      tags:
+        - Authentication
+      requestBody:
+        description: Data yang dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/register"
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              example:
+                status: success
+                message: Registrasi berhasil
+        "400":
+          description: Input dari client tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+  "/admin/users":
+    get:
+      summary: Ambil semua data users
+      security:
+        - bearerToken: []
+      tags:
+        - Admin users management
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan semua data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/user"
+                          properties:
+                            avatar:
+                              type: object
+                              "$ref": "#/components/schemas/avatar"
+        "400":
+          description: Query parameter tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    post:
+      summary: Menambahkan user baru
+      tags:
+        - Admin users management
+      security:
+        - bearerToken: []
+      requestBody:
+        description: Body yang harus dikirimkan
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/create_user"
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/user"
+                    properties:
+                      avatar:
+                        type: object
+                        "$ref": "#/components/schemas/avatar"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/users/{userId}":
+    get:
+      summary: Ambil data user berdasarkan id
+      security:
+        - bearerToken: []
+      tags:
+        - Admin users management
+      parameters:
+        - name: userId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/user"
+                    properties:
+                      avatar:
+                        type: object
+                        "$ref": "#/components/schemas/avatar"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    put:
+      summary: Mengubah data user
+      tags:
+        - Admin users management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: userId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Body yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/create_user"
+
+      responses:
+        "200":
+          description: Berhasil mengubah data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus user
+      security:
+        - bearerToken: []
+      tags:
+        - Admin users management
+      parameters:
+        - name: userId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil menghapus user
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/classrooms":
+    get:
+      summary: Ambil semua kelas
+      tags:
+        - Admin classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/classroom"
+                          properties:
+                            thumbnail:
+                              "$ref": "#/components/schemas/attachment"
+                            creator:
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/classrooms/{classroomId}":
+    get:
+      summary: Ambil data kelas berdasarkan id
+      tags:
+        - Admin classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/classroom"
+                        properties:
+                          thumbnail:
+                            "$ref": "#/components/schemas/attachment"
+                          creator:
+                            "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Kelas tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    delete:
+      summary: Menghapus kelas
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Admin classrooms management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/materials":
+    get:
+      summary: Ambil semua materi
+      tags:
+        - Admin materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/material"
+                          properties:
+                            classroom:
+                              type: object
+                              "$ref": "#/components/schemas/classroom"
+                              properties:
+                                creator:
+                                  type: object
+                                  "$ref": "#/components/schemas/user"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/materials/{materialId}":
+    get:
+      summary: Ambil data materi berdasarkan id
+      tags:
+        - Admin materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/material"
+                        properties:
+                          classroom:
+                            type: object
+                            "$ref": "#/components/schemas/classroom"
+                            properties:
+                              creator:
+                                type: object
+                                "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    delete:
+      summary: Menghapus materi
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Admin materials management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/assignments":
+    get:
+      summary: Ambil semua tugas
+      tags:
+        - Admin assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/assignment"
+                          properties:
+                            classroom:
+                              type: object
+                              "$ref": "#/components/schemas/classroom"
+                              properties:
+                                creator:
+                                  type: object
+                                  "$ref": "#/components/schemas/user"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/assignments/{assignmentId}":
+    get:
+      summary: Ambil data tugas berdasarkan id
+      tags:
+        - Admin assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/assignment"
+                        properties:
+                          classroom:
+                            type: object
+                            "$ref": "#/components/schemas/classroom"
+                            properties:
+                              creator:
+                                type: object
+                                "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    delete:
+      summary: Menghapus tugas
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Admin assignments management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/attachments":
+    get:
+      summary: Ambil semua data lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Admin attachments management
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan semua data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/attachment"
+                          properties:
+                            uploader:
+                              type: object
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query parameter tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    post:
+      summary: Menambahkan lampiran baru
+      tags:
+        - Admin attachments management
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file
+                file:
+                  type: file
+                  example: undefined
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/admin/attachments/{attachmentId}":
+    get:
+      summary: Ambil data lampiran berdasarkan id
+      security:
+        - bearerToken: []
+      tags:
+        - Admin attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    patch:
+      summary: Mengubah data lampiran
+      tags:
+        - Admin attachments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Body yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file baru
+      responses:
+        "200":
+          description: Berhasil mengubah data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Admin attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil menghapus lampiran
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/classrooms":
+    get:
+      summary: Ambil semua kelas
+      tags:
+        - Teacher classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/classroom"
+                          properties:
+                            thumbnail:
+                              "$ref": "#/components/schemas/attachment"
+                            creator:
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    post:
+      summary: Tambah kelas baru
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      requestBody:
+        description: Data yang harus dikirim
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/create_classroom"
+      responses:
+        "201":
+          description: Berhasil menambahkan kelas
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/classroom"
+                        properties:
+                          thumbnail:
+                            type: object
+                            "$ref": "#/components/schemas/attachment"
+                          creator:
+                            type: object
+                            "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/classrooms/{classroomId}":
+    get:
+      summary: Ambil data kelas berdasarkan id
+      tags:
+        - Teacher classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - "$ref": "#/components/schemas/classroom"
+                          - type: object
+                            properties:
+                              thumbnail:
+                                "$ref": "#/components/schemas/attachment"
+                              creator:
+                                "$ref": "#/components/schemas/user"
+                              members:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/user"
+                              materials:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/material"
+                              assignments:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/assignment"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    put:
+      summary: Edit data kelas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/create_classroom"
+      responses:
+        "200":
+          description: Berhasil menambahkan kelas
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/classroom"
+                        properties:
+                          thumbnail:
+                            type: object
+                            "$ref": "#/components/schemas/attachment"
+                          creator:
+                            type: object
+                            "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Kelas tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus kelas
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/classrooms/{classroomId}/add":
+    patch:
+      summary: Menambahkan anggota ke kelas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: array
+                  items:
+                    type: number
+                    format: integer
+                    example: 1
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/classrooms/{classroomId}/remove":
+    patch:
+      summary: Menghapus anggota kelas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: array
+                  items:
+                    type: number
+                    format: integer
+                    example: 1
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/attachments":
+    get:
+      summary: Ambil semua data lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher attachments management
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan semua data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/attachment"
+                          properties:
+                            uploader:
+                              type: object
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query parameter tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    post:
+      summary: Menambahkan lampiran baru
+      tags:
+        - Teacher attachments management
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file
+                file:
+                  type: file
+                  example: undefined
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/attachments/{attachmentId}":
+    get:
+      summary: Ambil data lampiran berdasarkan id
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    patch:
+      summary: Mengubah data lampiran
+      tags:
+        - Teacher attachments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Body yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file baru
+      responses:
+        "200":
+          description: Berhasil mengubah data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil menghapus lampiran
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/materials":
+    get:
+      summary: Mengambil semua data materi yang dibuat
+      tags:
+        - Teacher materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - "$ref": "#/components/schemas/material"
+                            - type: object
+                              properties:
+                                classroom:
+                                  "$ref": "#/components/schemas/classroom"
+                                attachments:
+                                  type: array
+                                  items:
+                                    "$ref": "#/components/schemas/attachment"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+    post:
+      summary: Menambahkan materi baru
+      tags:
+        - Teacher materials management
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/create_material"
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/material"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/materials/{materialId}":
+    get:
+      summary: Ambil data materi berdasarkan id
+      tags:
+        - Teacher materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        "$ref": "#/components/schemas/material"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    put:
+      summary: Edit data materi
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher materials management
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/edit_material"
+      responses:
+        "200":
+          description: Berhasil menambahkan materi
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/material"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Materi tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus materi
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher classrooms management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/materials/{materialId}/add-attachment":
+    patch:
+      summary: Menambahkan lampiran ke materi
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher materials management
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/materials/{materialId}/remove-attachment":
+    patch:
+      summary: Menghapus lampiran dari materi
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher materials management
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/assignments":
+    get:
+      summary: Mengambil semua data tugas yang dibuat
+      tags:
+        - Teacher assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - "$ref": "#/components/schemas/material"
+                            - type: object
+                              properties:
+                                classroom:
+                                  "$ref": "#/components/schemas/classroom"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+    post:
+      summary: Menambahkan tugas baru
+      tags:
+        - Teacher assignments management
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/create_assignment"
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/assignment"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/assignments/{assignmentId}":
+    get:
+      summary: Ambil data tugas berdasarkan id
+      tags:
+        - Teacher assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        "$ref": "#/components/schemas/assignment"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    put:
+      summary: Edit data tugas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        content:
+          application/json:
+            schema:
+              type: object
+              "$ref": "#/components/schemas/edit_assignment"
+      responses:
+        "200":
+          description: Berhasil menambahkan tugas
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        "$ref": "#/components/schemas/assignment"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Tugas tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus tugas
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher assignments management
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak dapat ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/assignments/{assignmentId}/add-attachment":
+    patch:
+      summary: Menambahkan lampiran ke tugas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/assignments/{assignmentId}/remove-attachment":
+    patch:
+      summary: Menghapus lampiran dari tugas
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/teachers/assignments/{assignmentId}/edit-grade":
+    patch:
+      summary: Mengubah nilai tugas siswa
+      security:
+        - bearerToken: []
+      tags:
+        - Teacher assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                member_id:
+                  type: number
+                  format: integer
+                  example: 1
+                grade:
+                  type: number
+                  format: float
+      responses:
+        "200":
+          description: Berhasil mengubah data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/classrooms":
+    get:
+      summary: Ambil semua kelas yang siswa sudah join
+      tags:
+        - Student classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/classroom"
+                          properties:
+                            thumbnail:
+                              "$ref": "#/components/schemas/attachment"
+                            creator:
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/classrooms/{classroomId}":
+    get:
+      summary: Ambil data kelas
+      tags:
+        - Student classrooms management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - "$ref": "#/components/schemas/classroom"
+                          - type: object
+                            properties:
+                              thumbnail:
+                                "$ref": "#/components/schemas/attachment"
+                              creator:
+                                "$ref": "#/components/schemas/user"
+                              members:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/user"
+                              materials:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/material"
+                              assignments:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/assignment"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+  "/students/classrooms/{classroomId}/join":
+    patch:
+      summary: Bergabung ke kelas
+      security:
+        - bearerToken: []
+      tags:
+        - Student classrooms management
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "201":
+          description: Berhasil bergabung ke kelas
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/classrooms/{classroomId}/quit":
+    patch:
+      summary: Keluar dari kelas
+      security:
+        - bearerToken: []
+      tags:
+        - Student classrooms management
+      parameters:
+        - name: classroomId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/attachments":
+    get:
+      summary: Ambil semua data lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Student attachments management
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan semua data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          "$ref": "#/components/schemas/attachment"
+                          properties:
+                            uploader:
+                              type: object
+                              "$ref": "#/components/schemas/user"
+        "400":
+          description: Query parameter tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    post:
+      summary: Menambahkan lampiran baru
+      tags:
+        - Student attachments management
+      security:
+        - bearerToken: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file
+                file:
+                  type: file
+                  example: undefined
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/attachments/{attachmentId}":
+    get:
+      summary: Ambil data lampiran berdasarkan id
+      security:
+        - bearerToken: []
+      tags:
+        - Student attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+    patch:
+      summary: Mengubah data lampiran
+      tags:
+        - Student attachments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Body yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: Nama file baru
+      responses:
+        "200":
+          description: Berhasil mengubah data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+                properties:
+                  data:
+                    type: object
+                    "$ref": "#/components/schemas/attachment"
+                    properties:
+                      uploader:
+                        type: object
+                        "$ref": "#/components/schemas/user"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+    delete:
+      summary: Menghapus lampiran
+      security:
+        - bearerToken: []
+      tags:
+        - Student attachments management
+      parameters:
+        - name: attachmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil menghapus lampiran
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Lampiran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/materials":
+    get:
+      summary: Mengambil semua data materi yang dibuat
+      tags:
+        - Student materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - "$ref": "#/components/schemas/material"
+                            - type: object
+                              properties:
+                                classroom:
+                                  "$ref": "#/components/schemas/classroom"
+                                attachments:
+                                  type: array
+                                  items:
+                                    "$ref": "#/components/schemas/attachment"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+  "/students/materials/{materialId}":
+    get:
+      summary: Mengambil data materi berdasarkan id
+      tags:
+        - Student materials management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: materialId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - "$ref": "#/components/schemas/material"
+                            - type: object
+                              properties:
+                                classroom:
+                                  allOf:
+                                    - "$ref": "#/components/schemas/classroom"
+                                    - type: object
+                                      properties:
+                                        creator:
+                                          "$ref": "#/components/schemas/user"
+                                attachments:
+                                  type: array
+                                  items:
+                                    "$ref": "#/components/schemas/attachment"
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+  "/students/assignments":
+    get:
+      summary: Mengambil semua data tugas
+      tags:
+        - Student assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: orderBy
+          description: Urutkan data berdasarkan nama kolom
+          in: query
+          schema:
+            type: string
+            example: name
+        - name: order
+          description: Urutkan data atas ke bawah atau sebaliknya
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          allOf:
+                            - "$ref": "#/components/schemas/assignment"
+                            - type: object
+                              properties:
+                                classroom:
+                                  allOf:
+                                    - "$ref": "#/components/schemas/classroom"
+                                    - type: object
+                                      properties:
+                                        creator:
+                                          "$ref": "#/components/schemas/user"
+                                attachments:
+                                  type: array
+                                  items:
+                                    "$ref": "#/components/schemas/attachment"
+
+        "400":
+          description: Query tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_QUERY_ERROR"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+  "/students/assignments/{assignmentId}":
+    get:
+      summary: Ambil data tugas berdasarkan id
+      tags:
+        - Student assignments management
+      security:
+        - bearerToken: []
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      responses:
+        "200":
+          description: Berhasil mendapatkan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - "$ref": "#/components/schemas/STATUS_OK"
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - "$ref": "#/components/schemas/assignment"
+                          - type: object
+                            properties:
+                              classroom:
+                                allOf:
+                                  - "$ref": "#/components/schemas/classroom"
+                                  - type: object
+                                    properties:
+                                      creator:
+                                        "$ref": "#/components/schemas/user"
+                              attachments:
+                                type: array
+                                items:
+                                  "$ref": "#/components/schemas/attachment"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+  "/students/assignments/{assignmentId}/add-attachment":
+    patch:
+      summary: Menambahkan lampiran ke tugas
+      security:
+        - bearerToken: []
+      tags:
+        - Student assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "201":
+          description: Berhasil menambahkan data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/students/assignments/{assignmentId}/remove-attachment":
+    patch:
+      summary: Menghapus lampiran dari tugas
+      security:
+        - bearerToken: []
+      tags:
+        - Student assignments management
+      parameters:
+        - name: assignmentId
+          in: path
+          schema:
+            type: number
+            format: integer
+          required: true
+      requestBody:
+        description: Data yang harus dikirim
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "200":
+          description: Berhasil menghapus data
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "403":
+          description: Tidak memiliki akses
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_FORBIDDEN"
+        "404":
+          description: Data tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+  "/profile":
+    patch:
+      summary: Edit profile
+      tags:
+        - Profile
+      security:
+        - bearerToken: []
+      requestBody:
+        description: Data yang harus dikirim
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: Username pengguna
+                attachment_id:
+                  type: number
+                  format: integer
+                  example: 1
+      responses:
+        "200":
+          description: Profil berhasil diubah
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_OK"
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_BAD_REQUEST"
+        "401":
+          description: User tidak dikenali
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_UNAUTHORIZED"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/STATUS_SERVER_ERROR"
+
+components:
+  securitySchemes:
+    bearerToken:
+      type: http
+      bearerFormat: JWT
+      scheme: bearer
+  schemas:
+    STATUS_OK:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: "Pesan sukses"
+    STATUS_BAD_REQUEST:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Input tidak valid
+        errors:
+          type: object
+          properties:
+            username:
+              type: string
+              example: Username harus diisi
+    STATUS_QUERY_ERROR:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Query tidak valid
+    STATUS_UNAUTHORIZED:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: User tidak dikenali
+    STATUS_FORBIDDEN:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: "{Jenis data} tidak dapat diakses"
+    STATUS_NOT_FOUND:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: "{Jenis data} tidak ditemukan"
+    STATUS_SERVER_ERROR:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Server error
+    TIMESTAMP:
+      type: string
+      format: timestamp
+      example: "2024-12-30T00:00:00.000Z"
+    login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+        password:
+          type: string
+          example: "*****"
+    register:
+      type: object
+      properties:
+        username:
+          type: string
+          example: user
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+        password:
+          type: string
+          example: "*****"
+        confirm_password:
+          type: string
+          example: "*****"
+    user:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        username:
+          type: string
+          example: user
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+          uniqueItems: true
+        role:
+          type: string
+          enum:
+            - ADMIN
+            - TEACHER
+            - STUDENT
+          example: STUDENT
+        avatar_id:
+          type: number
+          format: integer
+          example: 1
+          nullable: true
+        created_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+        updated_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+    classroom:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        name:
+          type: string
+          example: Nama kelas
+        description:
+          type: string
+          example: Deskripsi kelas
+        thumbnail_id:
+          type: number
+          format: integer
+          example: 1
+        creator_id:
+          type: number
+          format: integer
+          example: 1
+        created_at:
+          type: string
+          "$ref": "#/components/schemas/TIMESTAMP"
+        updated_at:
+          type: string
+          "$ref": "#/components/schemas/TIMESTAMP"
+    material:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        name:
+          type: string
+          example: Nama materi
+        description:
+          type: string
+          example: Deskripsi materi
+        classroom_id:
+          type: number
+          format: integer
+          example: 1
+        created_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+        updated_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+    assignment:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        name:
+          type: string
+          example: Nama tugas
+        description:
+          type: string
+          example: Deskripsi tugas
+        status:
+          type: string
+          example: OPEN
+          enum:
+            - OPEN
+            - CLOSED
+        classroom_id:
+          type: number
+          format: integer
+          example: 1
+        created_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+        updated_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+    avatar:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        attachment_id:
+          type: number
+          format: integer
+          example: 1
+        attachment:
+          "$ref": "#/components/schemas/attachment"
+    attachment:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 1
+        filename:
+          type: string
+          example: nama file
+        file_size:
+          type: number
+          example: 1024000
+          description: Bytes
+        file_type:
+          type: string
+          example: image/jpeg
+        uploader_id:
+          type: number
+          format: integer
+          example: 1
+        path:
+          type: string
+          example: attachment-123123.jpg
+        created_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+        updated_at:
+          "$ref": "#/components/schemas/TIMESTAMP"
+    create_user:
+      type: object
+      properties:
+        username:
+          type: string
+          example: user
+        email:
+          type: string
+          example: user@gmail.com
+        password:
+          type: string
+          example: "*****"
+        role:
+          type: string
+          example: STUDENT
+          enum:
+            - ADMIN
+            - TEACHER
+            - STUDENT
+    create_classroom:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nama kelas
+        description:
+          type: string
+          example: Deskripsi kelas
+        thumbnail_id:
+          type: number
+          format: integer
+          example: 1
+    create_material:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nama materi
+        description:
+          type: string
+          example: Deskripsi materi
+        classroom_id:
+          type: number
+          format: integer
+          example: 1
+    edit_material:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nama materi
+        description:
+          type: string
+          example: Deskripsi materi
+    create_assignment:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nama tugas
+        description:
+          type: string
+          example: Deskripsi tugas
+        classroom_id:
+          type: number
+          format: integer
+          example: 1
+        status:
+          type: string
+          enum:
+            - OPEN
+            - CLOSED
+          example: OPEN
+    edit_assignment:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nama tugas
+        description:
+          type: string
+          example: Deskripsi tugas
+        status:
+          type: string
+          enum:
+            - OPEN
+            - CLOSED
+          example: OPEN
